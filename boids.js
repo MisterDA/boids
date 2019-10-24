@@ -3,6 +3,7 @@
 
 import * as THREE from './three.js-r109/build/three.module.js';
 import { OrbitControls } from './three.js-r109/examples/jsm/controls/OrbitControls.js';
+import Stats from './three.js-r109/examples/jsm/libs/stats.module.js';
 "use strict";
 
 let pause = false;
@@ -17,6 +18,9 @@ const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+const stats = new Stats();
+document.body.appendChild(stats.dom);
 
 const light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
 scene.add(light);
@@ -134,8 +138,9 @@ const animate = function(dt) {
     requestAnimationFrame(animate);
     controls.update();
     //if(!pause)
-        update_boids();
+    update_boids();
     renderer.render(scene, camera);
+    stats.update();
     pause = true;
 };
 
