@@ -2,28 +2,79 @@
 // Copyright © 2019 Antonin Décimo <antonin.decimo@gmail.com>
 
 import * as THREE from './three.js-r109/build/three.module.js';
+import { OrbitControls } from './three.js-r109/examples/jsm/controls/OrbitControls.js';
 "use strict";
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+scene.add( light );
 
-camera.position.z = 5;
+const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+const controls = new OrbitControls( camera, renderer.domElement );
+camera.position.set( 0, 20, 100 );
+controls.update();
 
-const animate = function() {
+window.addEventListener('resize', function() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}, false);
+
+const world_geometry = new THREE.BoxBufferGeometry(100, 100, 100);
+const world_edges = new THREE.EdgesGeometry(world_geometry);
+const world_lines = new THREE.LineSegments(world_edges, new THREE.LineBasicMaterial({color: 0xffffff}));
+scene.add(world_lines);
+
+const cone_geometry = new THREE.ConeBufferGeometry(.5, 1, 8);
+const cone_material = new THREE.MeshPhongMaterial({color: 0xffff00});
+
+const boids = new Array(1000);
+
+let x = -50, y = -50, z = -50;
+const init_boid = function(i) {
+    const mesh = new THREE.Mesh(cone_geometry, cone_material);
+    mesh.position.x = x;
+    mesh.position.y = y;
+    mesh.position.z = z;
+    x += 10;
+    if(x >= 50) {
+        x = -50;
+        y += 10;
+        if(y >= 50) {
+            y = -50;
+            z += 10;
+            if(z >= 50) {
+                z = -50;
+            }
+        }
+    }
+    const velocity = new THREE.Vector3(5, 5, 5);
+    return {mesh, velocity};
+}
+
+for(let i = 0; i < boids.length; ++i) {
+    const boid = init_boid(i);
+    scene.add(boid.mesh);
+    boids[i] = boid;
+}
+
+const update_boids = function() {
+    for (const boid of boids) {
+        boid.velocity.addVectors(collision_avoidance(boid),
+                                 velocity_matching(boid));
+        boid.velocity.add(flock_centering(boid));
+    }
+}
+
+const animate = function(dt) {
     requestAnimationFrame(animate);
-
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-
+    controls.update();
+    update_boids();
     renderer.render(scene, camera);
 };
 
