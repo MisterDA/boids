@@ -49,26 +49,24 @@ const cone_material = new THREE.MeshPhongMaterial({color: 0xffff00});
 
 const boids = new Array(500);
 
+// https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/
+const sphere = function(radius) {
+    const u = Math.random();
+    const v = Math.random();
+    const theta = u * 2.0 * Math.PI;
+    const phi = Math.acos(2.0 * v - 1.0);
+    const r = Math.cbrt(Math.random());
+    const sinTheta = Math.sin(theta);
+    const cosTheta = Math.cos(theta);
+    const sinPhi = Math.sin(phi);
+    const cosPhi = Math.cos(phi);
+    return (new THREE.Vector3(sinPhi * cosTheta, sinPhi * sinTheta, cosPhi))
+        .multiplyScalar(r * radius);
+}
+
 const init_boid = function(i) {
     const mesh = new THREE.Mesh(cone_geometry, cone_material);
-
-    // https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/
-    const sphere = function(radius) {
-        const u = Math.random();
-        const v = Math.random();
-        const theta = u * 2.0 * Math.PI;
-        const phi = Math.acos(2.0 * v - 1.0);
-        const r = Math.cbrt(Math.random());
-        const sinTheta = Math.sin(theta);
-        const cosTheta = Math.cos(theta);
-        const sinPhi = Math.sin(phi);
-        const cosPhi = Math.cos(phi);
-        return (new THREE.Vector3(sinPhi * cosTheta, sinPhi * sinTheta, cosPhi))
-            .multiplyScalar(r * radius);
-    }
-
     mesh.position.copy(sphere(50));
-
     const velocity = new THREE.Vector3(Math.random(), Math.random(), Math.random());
     return {mesh, velocity};
 }
